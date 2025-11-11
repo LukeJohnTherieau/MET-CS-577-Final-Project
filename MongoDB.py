@@ -9,16 +9,14 @@ class MongoDB:
         self.__url = url
         
         
-    def append(self, df:pd.DataFrame, collection_name:str) -> bool:
+    def append(self, df:pd.DataFrame, collection_name:str, timeseries:dict = None) -> bool:
+        if not timeseries:
+            timeseries = {}
+            
         with pymongo.MongoClient(self.__url) as client:
             db = client[self.__database_name]
             if collection_name not in db.list_collection_names():
-                db.create_collection(
-                    name = collection_name, 
-                    timeseries = {
-                        'timeField' : 'timestamp' 
-                    }
-                )
+                db.create_collection(**{"name" : collection_name} | timeseries)
                 
             db[collection_name].insert_many(
                 df.to_dict(
