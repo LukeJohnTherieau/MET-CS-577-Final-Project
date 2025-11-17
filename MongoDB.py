@@ -13,6 +13,11 @@ class MongoDB:
         if not timeseries:
             timeseries = {}
             
+        else:
+            timeseries = {
+                "timeseries" : timeseries
+            }
+            
         with pymongo.MongoClient(self.__url) as client:
             db = client[self.__database_name]
             if collection_name not in db.list_collection_names():
@@ -25,7 +30,7 @@ class MongoDB:
             )
             
             
-    def query(self, collection_name:str, query:dict = {}) -> Generator[pd.DataFrame]:
+    def query(self, collection_name:str, query:dict = {}):
         rows = []
         with pymongo.MongoClient(self.__url) as client:
             db = client[self.__database_name]
