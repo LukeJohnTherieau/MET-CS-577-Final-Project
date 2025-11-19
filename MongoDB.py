@@ -30,6 +30,18 @@ class MongoDB:
             )
             
             
+    def count(self, collection_name:str, query:dict = {}) -> int:
+        with pymongo.MongoClient(self.__url) as client:
+            db = client[self.__database_name]
+            return db[collection_name].count_documents(query)
+        
+        
+    def list_collection_names(self):
+        with pymongo.MongoClient(self.__url) as client:
+            db = client[self.__database_name]
+            return db.list_collection_names()
+        
+        
     def query(self, collection_name:str, query:dict = {}):
         rows = []
         with pymongo.MongoClient(self.__url) as client:
@@ -39,14 +51,29 @@ class MongoDB:
             )
             previous_retrieved = 0
             for row in cursor:
-                if len(row) > 0 and cursor.retrieved != previous_retrieved:
+                if cursor.retrieved != previous_retrieved:
                     previous_retrieved = cursor.retrieved
-                    yield pd.DataFrame(rows)
-                    rows.clear()
+                    if len(rows) > 0:
+                        yield pd.DataFrame(rows)
+                        rows.clear()
                         
                 rows.append(row)
                 
             yield pd.DataFrame(rows)
+            
+            
+    def aggregate(self, collection_name:str, pipeline:list):
+        rows = []
+        with pymongo.MongoClient(self.__url) as client:
+            db = client[self.__database_name]
+            cursor  = db[collection_name].aggregate(pipeline)
+            return pd.DataFrame(
+                [
+                    row
+                    for row 
+                    in cursor
+                ]
+            )
     
     
     def __contains__(self, collection_name):
